@@ -39,11 +39,7 @@ async function fetchEmails (completion) {
   if (thredsList.messages && thredsList.messages.length > 0) {
     for (const message of thredsList.messages.splice(0, 5)) {
       const thread = await fetchThread(message.id);
-      // console.log(thread);
-      for (const message of thread.messages) {
-        // const messageText = convertMultipartEmail(message);
-        console.log(JSON.stringify(message, null, 2));
-      }
+      console.log(gmailThreadFormatter(thread));
     }
   } else {
     console.log('No emails found');
@@ -51,35 +47,38 @@ async function fetchEmails (completion) {
 }
 
 const convertMultipartEmail = (message) => {
-  // also format it like:
-  // Subject:
-  // Date:
-  // From:
-  // To:
-  // Cc:
-  // Bcc:
-  // Body:
   let messageText = '';
   for (const part of message.payload.parts) {
     if (part.mimeType === 'text/plain') {
       messageText += atob(part.body.data);
     }
   }
-  return messageText;
+  // remove whitespaces in each line
+  messageText = messageText.split('\n').map(line => line.trim()).join('\n');
+  // replace multiple new lines with single new line
+  return messageText.replace(/\n+/g, '\n').trim();
 }
 
-const multipartEmailParser = (message) => {
-  let messageText = '';
-  for (const part of message.payload.parts) {
-    if (part.mimeType === 'text/plain') {
-      messageText += atob(part.body.data);
+const gmailThreadFormatter = (thread) => {
+  // console.log(thread);
+  let formattedThread = '';
+  for (const message of thread.messages) {
+    formattedThread += `Subject: ${message.payload.headers.find(header => header.name === 'Subject').value}\n`;
+    formattedThread += `Date: ${new Date(parseInt(message.internalDate)).toDateString()}\n`;
+    formattedThread += `From: ${message.payload.headers.find(header => header.name === 'From').value}\n`;
+    formattedThread += `To: ${message.payload.headers.find(header => header.name === 'To').value}\n`;
+    const ccHeader = message.payload.headers.find(header => header.name === 'Cc');
+    if (ccHeader) {
+      formattedThread += `Cc: ${ccHeader.value}\n`;
     }
+    const bccHeader = message.payload.headers.find(header => header.name === 'Bcc');
+    if (bccHeader) {
+      formattedThread += `Bcc: ${bccHeader.value}\n`;
+    }
+    formattedThread += `Body: ${convertMultipartEmail(message)}\n`;
+    formattedThread += '\n';
   }
-  return messageText;
-}
-
-const removeUnnecessaryNewLines = (text) => {
-  return text.replace(/(\r\n|\n|\r)/gm, '');
+  return formattedThread;
 }
 
 module.exports = {
