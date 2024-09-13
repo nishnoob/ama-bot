@@ -1,6 +1,9 @@
-
+require('dotenv').config();
+// console.log(process.env)
 const { fetchEmails } = require('./gmailSearch');
 const getCompletion = require('./textCompletion');
+
+
 
 // continous asking for user input until quit
 const askUserInput = async (rl) => {

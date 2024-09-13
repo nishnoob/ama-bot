@@ -1,3 +1,5 @@
+const fetcher = require("./fetcher");
+
 function extractHttpRequset (inputStr) {
   // we need to extract http requests using regex from a string
   // https://www.googleapis.com/gmail/v1/users/me/messages?q="bus to kozhikode" after:2023-12-01 before:2024-01-01 label:inbox
@@ -5,28 +7,6 @@ function extractHttpRequset (inputStr) {
   const regex = /https?:\/\/[^\s]+(?:\s+[^:]+:[^:\s]+)*/g;
   const match = inputStr.match(regex);
   return match
-}
-
-const GMAIL_AUTH_TOKEN = "ya29.a0AcM612zegvs4bNBQrIISIuHe7xOicBlhGHT-z7Y0VpNcYyefFfxZ8S8pUH7ZetQSE1lcPufEY8l84F0RxSXhMvUwmy6gi8EYs53xmZ0VRakXm4FLql0sRNQMJWGCArXi--1wpmhr0toCmIVyWi2zYZlxKKjpaw3JHwaCgYKAcESARMSFQHGX2MiZWaUfLFdaM_buXcH1YYtjg0169";
-
-async function fetcher (url) {
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GMAIL_AUTH_TOKEN
-      }
-    });
-    const data = await response.json();
-    if (data.error) {
-      throw new Error(data.error.message);
-    } else {
-      return data;
-    }
-  } catch (error) {
-    console.log(error);
-  }
 }
 
 async function fetchThreadList (url) {
@@ -62,7 +42,7 @@ async function fetchEmails (completion) {
       // console.log(thread);
       for (const message of thread.messages) {
         // const messageText = convertMultipartEmail(message);
-        console.log(message.snippet);
+        console.log(JSON.stringify(message, null, 2));
       }
     }
   } else {
